@@ -40,20 +40,15 @@ local Window = Rayfield:CreateWindow({
 local DevTab = Window:CreateTab("Developer", nil) -- Title, Image
 local Section = DevTab:CreateSection("Main")
 
-local Toggle = DevTab:CreateToggle({
-   Name = "Autofarm (city bus)",
-   CurrentValue = false,
-   Flag = "AFC", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-   Callback = function(Value)
-  local Players = game:GetService("Players")
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local PathfindingService = game:GetService("PathfindingService")
 local LocalPlayer = Players.LocalPlayer
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local Humanoid = Character:WaitForChild("Humanoid")
 
--- Funktion zum Bewegen (realistisch)
 local function moveToPosition(pos)
+    local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local Humanoid = Character:WaitForChild("Humanoid")
+    
     local path = PathfindingService:CreatePath({
         AgentRadius = 2,
         AgentHeight = 5,
@@ -68,48 +63,57 @@ local function moveToPosition(pos)
         for _, waypoint in ipairs(path:GetWaypoints()) do
             Humanoid:MoveTo(waypoint.Position)
             Humanoid.MoveToFinished:Wait()
-            task.wait(0.1) -- kleine Pause für mehr Human-Like Bewegung
+            task.wait(0.1)
         end
     else
-        warn("Path konnte nicht berechnet werden.")
+        warn("Pfad konnte nicht berechnet werden.")
     end
 end
 
--- FireServer Wrapper mit Delay
 local function fire(remoteName, ...)
-    task.wait(math.random(0.4, 0.8)) -- zufälliger Delay für Legit-Vibes
+    task.wait(math.random(0.4, 0.8))
     ReplicatedStorage:WaitForChild("Bnl"):WaitForChild(remoteName):FireServer(...)
 end
 
--- ✅ Schritt 1: Zum Bus Job NPC
-moveToPosition(Vector3.new(-1731, 6, -1281))
+local AutofarmActive = false
+local AutofarmThread = nil
 
--- ⏺️ Dialog starten
-fire("69141aa3-8c6a-4eee-ab58-c7805873c0ee")
+local Toggle = DevTab:CreateToggle({ 
+   Name = "Autofarm (city bus)", 
+   CurrentValue = false,
+   Flag = "Toggle1",
+   Callback = function(Value)
+      AutofarmActive = Value
+      
+      if AutofarmActive then
+         AutofarmThread = task.spawn(function()
+            -- Schritt 1: Zum Bus Job NPC
+            moveToPosition(Vector3.new(-1731, 6, -1281))
 
--- ✅ Schritt 2: Job auswählen
-fire("aeb8d87a-20a0-48e5-8249-ddf516b4dbe8", "City Bus Driver")
+            -- Dialog starten
+            fire("69141aa3-8c6a-4eee-ab58-c7805873c0ee")
 
--- 🔁 Dialog bestätigen
-fire("69141aa3-8c6a-4eee-ab58-c7805873c0ee")
+            -- Job auswählen
+            fire("aeb8d87a-20a0-48e5-8249-ddf516b4dbe8", "City Bus Driver")
 
--- ✅ Schritt 3: Zum Schlüssel laufen
-moveToPosition(Vector3.new(-1723, 6, -1266))
+            -- Dialog bestätigen
+            fire("69141aa3-8c6a-4eee-ab58-c7805873c0ee")
 
--- 🔑 Schlüssel abholen
-fire("e8f3d225-1be6-487b-9572-36254957b902", "Mercedes Citaro Bus Driver")
+            -- Schritt 2: Zum Schlüssel laufen
+            moveToPosition(Vector3.new(-1723, 6, -1266))
 
+            -- Schlüssel abholen
+            fire("e8f3d225-1be6-487b-9572-36254957b902", "Mercedes Citaro Bus Driver")
+
+            -- Deaktivieren nach einem Run (optional)
+            Toggle:Set(false)
+         end)
+      else
+         if AutofarmThread then
+            task.cancel(AutofarmThread)
+         end
+      end
    end,
-})
-
-local MainTab = Window:CreateTab("🏠 HOME", nil) -- Title, Image
-local Section = MainTab:CreateSection("Main")
-
-Rayfield:Notify({
-   Title = "Execution succesed!",
-   Content = "Test version executed!",
-   Duration = 6.5,
-   Image = nil,
 })
 
 local Button = MainTab:CreateButton({
