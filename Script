@@ -40,8 +40,8 @@ local Window = Rayfield:CreateWindow({
 local DevTab = Window:CreateTab("Developer", nil) -- Title, Image
 local Section = DevTab:CreateSection("Main")
 
-local Button = Tab:CreateButton({
-   Name = "Button Example",
+local Button = DevTab:CreateButton({
+   Name = "AUTOFARM",
    Callback = function()
    local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
