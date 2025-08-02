@@ -43,67 +43,64 @@ local Section = DevTab:CreateSection("Main")
 local Button = DevTab:CreateButton({
    Name = "AUTOFARM",
    Callback = function()
-   local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local PathfindingService = game:GetService("PathfindingService")
+       local Players = game:GetService("Players")
+       local ReplicatedStorage = game:GetService("ReplicatedStorage")
+       local PathfindingService = game:GetService("PathfindingService")
 
-local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid")
-local hrp = character:WaitForChild("HumanoidRootPart")
+       local player = Players.LocalPlayer
+       local character = player.Character or player.CharacterAdded:Wait()
+       local humanoid = character:WaitForChild("Humanoid")
+       local hrp = character:WaitForChild("HumanoidRootPart")
 
--- Nützliche Funktion, um zu Positionen zu laufen
-local function walkTo(position)
-    local path = PathfindingService:CreatePath({
-        AgentRadius = 2,
-        AgentHeight = 5,
-        AgentCanJump = true,
-        AgentJumpHeight = 10,
-        AgentMaxSlope = 45,
-    })
+       -- Positionen als Funktion
+       local function vec(x, y, z)
+           return Vector3.new(x, y, z)
+       end
 
-    path:ComputeAsync(hrp.Position, position)
+       -- Pfadfunktion
+       local function walkTo(position)
+           local path = PathfindingService:CreatePath({
+               AgentRadius = 2,
+               AgentHeight = 5,
+               AgentCanJump = true,
+               AgentJumpHeight = 10,
+               AgentMaxSlope = 45,
+           })
 
-    if path.Status == Enum.PathStatus.Complete then
-        for _, waypoint in ipairs(path:GetWaypoints()) do
-            humanoid:MoveTo(waypoint.Position)
-            humanoid.MoveToFinished:Wait()
-        end
-    else
-        warn("Pfad konnte nicht berechnet werden.")
-    end
-end
+           path:ComputeAsync(hrp.Position, position)
 
--- Zielpositionen
-local function vec(x, y, z)
-    return Vector3.new(x, y, z)
-end
+           -- ✅ Wichtig: KEINE Strings hier benutzen!
+           if path.Status == Enum.PathStatus.Complete then
+               for _, waypoint in ipairs(path:GetWaypoints()) do
+                   humanoid:MoveTo(waypoint.Position)
+                   humanoid.MoveToFinished:Wait()
+                   task.wait(math.random(3,6)/10) -- Menschlich wirken
+               end
+           else
+               warn("Pfad konnte nicht berechnet werden.")
+           end
+       end
 
--- Schritt 1: Zu NPC gehen
-walkTo(vec(-1731, 6, -1281))
-task.wait(0.5)
+       -- 🔁 Autofarm Schritte
+       walkTo(vec(-1731, 6, -1281))
+       task.wait(0.5)
 
--- Schritt 2: FireServer 1
-ReplicatedStorage:WaitForChild("Bnl"):WaitForChild("69141aa3-8c6a-4eee-ab58-c7805873c0ee"):FireServer()
-task.wait(0.5)
+       ReplicatedStorage:WaitForChild("Bnl"):WaitForChild("69141aa3-8c6a-4eee-ab58-c7805873c0ee"):FireServer()
+       task.wait(0.5)
 
--- Schritt 3: City Bus Driver Job holen
-ReplicatedStorage:WaitForChild("Bnl"):WaitForChild("aeb8d87a-20a0-48e5-8249-ddf516b4dbe8"):FireServer("City Bus Driver")
-task.wait(0.5)
+       ReplicatedStorage:WaitForChild("Bnl"):WaitForChild("aeb8d87a-20a0-48e5-8249-ddf516b4dbe8"):FireServer("City Bus Driver")
+       task.wait(0.5)
 
--- Schritt 4: Wieder FireServer 1
-ReplicatedStorage:WaitForChild("Bnl"):WaitForChild("69141aa3-8c6a-4eee-ab58-c7805873c0ee"):FireServer()
-task.wait(0.5)
+       ReplicatedStorage:WaitForChild("Bnl"):WaitForChild("69141aa3-8c6a-4eee-ab58-c7805873c0ee"):FireServer()
+       task.wait(0.5)
 
--- Schritt 5: Zum Schlüssel laufen
-walkTo(vec(-1723, 6, -1266))
-task.wait(0.5)
+       walkTo(vec(-1723, 6, -1266))
+       task.wait(0.5)
 
--- Schritt 6: Mercedes Citaro Bus holen
-ReplicatedStorage:WaitForChild("Bnl"):WaitForChild("e8f3d225-1be6-487b-9572-36254957b902"):FireServer("Mercedes Citaro Bus Driver")
-
+       ReplicatedStorage:WaitForChild("Bnl"):WaitForChild("e8f3d225-1be6-487b-9572-36254957b902"):FireServer("Mercedes Citaro Bus Driver")
    end,
 })
+
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
