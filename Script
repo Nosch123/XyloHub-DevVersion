@@ -40,128 +40,67 @@ local Window = Rayfield:CreateWindow({
 local DevTab = Window:CreateTab("Developer", nil) -- Title, Image
 local Section = DevTab:CreateSection("Main")
 
-local Toggle = DevTab:CreateToggle({
-    Name = "AUTOFARM (CB)",
-    CurrentValue = false,
-    Flag = "Autofarm",
-    Callback = function(Value)
-        if Value then
-            task.spawn(function()
-                local Players = game:GetService("Players")
-                local ReplicatedStorage = game:GetService("ReplicatedStorage")
-                local PathfindingService = game:GetService("PathfindingService")
-
-                local player = Players.LocalPlayer
-                local character = player.Character or player.CharacterAdded:Wait()
-                local humanoid = character:WaitForChild("Humanoid")
-                local hrp = character:WaitForChild("HumanoidRootPart")
-
-                local function walkTo(pos)
-                    local path = PathfindingService:CreatePath()
-                    path:ComputeAsync(hrp.Position, pos)
-                    if path.Status == Enum.PathStatus.Complete then
-                        for _, waypoint in ipairs(path:GetWaypoints()) do
-                            humanoid:MoveTo(waypoint.Position)
-                            humanoid.MoveToFinished:Wait()
-                            task.wait(math.random(0.1, 0.3)) -- kleine Pausen, als würdest du wirklich laufen
-                        end
-                    else
-                        task.wait(1) -- falls der Pfad nicht geht, kurz warten und probieren
-                    end
-                end
-
-                local function vec(x,y,z) return Vector3.new(x,y,z) end
-
-                while Value do
-                    walkTo(vec(-1731,6,-1281))
-                    task.wait(math.random(0.4, 0.7)) -- echte Pause nach dem Ankommen
-                    ReplicatedStorage.Bnl["69141aa3-8c6a-4eee-ab58-c7805873c0ee"]:FireServer()
-                    task.wait(math.random(0.4, 0.7))
-
-                    ReplicatedStorage.Bnl["aeb8d87a-20a0-48e5-8249-ddf516b4dbe8"]:FireServer("City Bus Driver")
-                    task.wait(math.random(0.4, 0.7))
-
-                    ReplicatedStorage.Bnl["69141aa3-8c6a-4eee-ab58-c7805873c0ee"]:FireServer()
-                    task.wait(math.random(0.4, 0.7))
-
-                    walkTo(vec(-1723,6,-1266))
-                    task.wait(math.random(0.4, 0.7))
-
-                    ReplicatedStorage.Bnl["e8f3d225-1be6-487b-9572-36254957b902"]:FireServer("Mercedes Citaro Bus Driver")
-                    task.wait(math.random(0.8, 1.2)) -- etwas längere Pause zum "durchatmen"
-                end
-            end)
-        end
-    end,
-})
-
-local MainTab = Window:CreateTab("🏠 HOME", nil) -- Title, Image
-local Section = MainTab:CreateSection("Main")
-
-local Button = MainTab:CreateButton({
-   Name = "+WalkSpeed",
+local Button = Tab:CreateButton({
+   Name = "Button Example",
    Callback = function()
    local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local UIS = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local PathfindingService = game:GetService("PathfindingService")
 
-local LocalPlayer = Players.LocalPlayer
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local HRP = Character:WaitForChild("HumanoidRootPart")
-local Humanoid = Character:WaitForChild("Humanoid")
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local hrp = character:WaitForChild("HumanoidRootPart")
 
-local SpeedhackEnabled = true
-local SpeedMultiplier = 1.3 -- default 
+-- Nützliche Funktion, um zu Positionen zu laufen
+local function walkTo(position)
+    local path = PathfindingService:CreatePath({
+        AgentRadius = 2,
+        AgentHeight = 5,
+        AgentCanJump = true,
+        AgentJumpHeight = 10,
+        AgentMaxSlope = 45,
+    })
 
-local function getMoveDirection()
-    local moveDir = Humanoid.MoveDirection
-    if moveDir.Magnitude > 0 then
-        return moveDir.Unit
+    path:ComputeAsync(hrp.Position, position)
+
+    if path.Status == Enum.PathStatus.Complete then
+        for _, waypoint in ipairs(path:GetWaypoints()) do
+            humanoid:MoveTo(waypoint.Position)
+            humanoid.MoveToFinished:Wait()
+        end
+    else
+        warn("Pfad konnte nicht berechnet werden.")
     end
-    return nil
 end
 
--- // T to toggle \\ --
-UIS.InputBegan:Connect(function(input, gp)
-    if gp then return end
-    if input.KeyCode == Enum.KeyCode.T then
-        SpeedhackEnabled = not SpeedhackEnabled
-        speedToggle:Set(SpeedhackEnabled)
-    end
-end)
+-- Zielpositionen
+local function vec(x, y, z)
+    return Vector3.new(x, y, z)
+end
 
--- // Movement \\ --
-RunService.RenderStepped:Connect(function(dt)
-    if SpeedhackEnabled and Humanoid.MoveDirection.Magnitude > 0 then
-        local moveDir = getMoveDirection()
-        if moveDir then
-            local speed = Humanoid.WalkSpeed * (SpeedMultiplier - 1)
-            HRP.CFrame = HRP.CFrame + (moveDir * speed * dt)
-        end
-    end
-end)
+-- Schritt 1: Zu NPC gehen
+walkTo(vec(-1731, 6, -1281))
+task.wait(0.5)
 
--- Auto-Fix on Respawn
-LocalPlayer.CharacterAdded:Connect(function(char)
-    Character = char
-    HRP = char:WaitForChild("HumanoidRootPart")
-    Humanoid = char:WaitForChild("Humanoid")
-end)
+-- Schritt 2: FireServer 1
+ReplicatedStorage:WaitForChild("Bnl"):WaitForChild("69141aa3-8c6a-4eee-ab58-c7805873c0ee"):FireServer()
+task.wait(0.5)
 
-   end,
-})
+-- Schritt 3: City Bus Driver Job holen
+ReplicatedStorage:WaitForChild("Bnl"):WaitForChild("aeb8d87a-20a0-48e5-8249-ddf516b4dbe8"):FireServer("City Bus Driver")
+task.wait(0.5)
 
-local Button = MainTab:CreateButton({
-   Name = "Reset Walkspeed",
-   Callback = function()
-   local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local Humanoid = Character:WaitForChild("Humanoid")
+-- Schritt 4: Wieder FireServer 1
+ReplicatedStorage:WaitForChild("Bnl"):WaitForChild("69141aa3-8c6a-4eee-ab58-c7805873c0ee"):FireServer()
+task.wait(0.5)
 
--- 🏃‍♂️ Reset WalkSpeed auf Roblox-Standard
-Humanoid.WalkSpeed = 16
+-- Schritt 5: Zum Schlüssel laufen
+walkTo(vec(-1723, 6, -1266))
+task.wait(0.5)
 
+-- Schritt 6: Mercedes Citaro Bus holen
+ReplicatedStorage:WaitForChild("Bnl"):WaitForChild("e8f3d225-1be6-487b-9572-36254957b902"):FireServer("Mercedes Citaro Bus Driver")
 
    end,
 })
