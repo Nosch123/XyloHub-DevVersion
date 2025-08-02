@@ -103,6 +103,8 @@ local Toggle = DevTab:CreateToggle({
    end,
 })
 
+local MainTab = Window:CreateTab("🏠 HOME", nil) -- Title, Image
+local Section = MainTab:CreateSection("Main")
 
 local Button = MainTab:CreateButton({
    Name = "+WalkSpeed",
