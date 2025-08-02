@@ -71,22 +71,22 @@ local function moveToPosition(pos)
 end
 
 local function fire(remoteName, ...)
-    task.wait(math.random(0.4, 0.8))
-    ReplicatedStorage:WaitForChild("Bnl"):WaitForChild(remoteName):FireServer(...)
+    local remote = ReplicatedStorage:FindFirstChild("Bnl")
+    if remote and remote:FindFirstChild(remoteName) then
+        remote[remoteName]:FireServer(...)
+    else
+        warn("Remote nicht gefunden: " .. remoteName)
+    end
 end
 
-local AutofarmActive = false
-local AutofarmThread = nil
-
+-- Toggle von dir:
 local Toggle = DevTab:CreateToggle({ 
    Name = "Autofarm (city bus)", 
    CurrentValue = false,
    Flag = "Toggle1",
    Callback = function(Value)
-      AutofarmActive = Value
-      
-      if AutofarmActive then
-         AutofarmThread = task.spawn(function()
+      if Value then
+         task.spawn(function()
             -- Schritt 1: Zum Bus Job NPC
             moveToPosition(Vector3.new(-1731, 6, -1281))
 
@@ -105,16 +105,13 @@ local Toggle = DevTab:CreateToggle({
             -- Schlüssel abholen
             fire("e8f3d225-1be6-487b-9572-36254957b902", "Mercedes Citaro Bus Driver")
 
-            -- Deaktivieren nach einem Run (optional)
+            -- Auto-Deaktivieren
             Toggle:Set(false)
          end)
-      else
-         if AutofarmThread then
-            task.cancel(AutofarmThread)
-         end
       end
    end,
 })
+
 
 local Button = MainTab:CreateButton({
    Name = "+WalkSpeed",
