@@ -40,78 +40,72 @@ local Window = Rayfield:CreateWindow({
 local DevTab = Window:CreateTab("Developer", nil) -- Title, Image
 local Section = DevTab:CreateSection("Main")
 
-local Players = game:GetService("Players")
+local Toggle = DevTab:CreateToggle({
+   Name = "AUTOFARM (CB)",
+   CurrentValue = false,
+   Flag = "Autofarm", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+   Callback = function(Value)
+   local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local PathfindingService = game:GetService("PathfindingService")
-local LocalPlayer = Players.LocalPlayer
 
-local function moveToPosition(pos)
-    local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-    local Humanoid = Character:WaitForChild("Humanoid")
-    
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local hrp = character:WaitForChild("HumanoidRootPart")
+
+-- Nützliche Funktion, um zu Positionen zu laufen
+local function walkTo(position)
     local path = PathfindingService:CreatePath({
         AgentRadius = 2,
         AgentHeight = 5,
         AgentCanJump = true,
         AgentJumpHeight = 10,
-        AgentMaxSlope = 45
+        AgentMaxSlope = 45,
     })
 
-    path:ComputeAsync(Character.HumanoidRootPart.Position, pos)
+    path:ComputeAsync(hrp.Position, position)
 
     if path.Status == Enum.PathStatus.Complete then
         for _, waypoint in ipairs(path:GetWaypoints()) do
-            Humanoid:MoveTo(waypoint.Position)
-            Humanoid.MoveToFinished:Wait()
-            task.wait(0.1)
+            humanoid:MoveTo(waypoint.Position)
+            humanoid.MoveToFinished:Wait()
         end
     else
         warn("Pfad konnte nicht berechnet werden.")
     end
 end
 
-local function fire(remoteName, ...)
-    local remote = ReplicatedStorage:FindFirstChild("Bnl")
-    if remote and remote:FindFirstChild(remoteName) then
-        remote[remoteName]:FireServer(...)
-    else
-        warn("Remote nicht gefunden: " .. remoteName)
-    end
+-- Zielpositionen
+local function vec(x, y, z)
+    return Vector3.new(x, y, z)
 end
 
--- Toggle von dir:
-local Toggle = DevTab:CreateToggle({ 
-   Name = "Autofarm (city bus)", 
-   CurrentValue = false,
-   Flag = "Toggle1",
-   Callback = function(Value)
-      if Value then
-         task.spawn(function()
-            -- Schritt 1: Zum Bus Job NPC
-            moveToPosition(Vector3.new(-1731, 6, -1281))
+-- Schritt 1: Zu NPC gehen
+walkTo(vec(-1731, 6, -1281))
+task.wait(0.5)
 
-            -- Dialog starten
-            fire("69141aa3-8c6a-4eee-ab58-c7805873c0ee")
+-- Schritt 2: FireServer 1
+ReplicatedStorage:WaitForChild("Bnl"):WaitForChild("69141aa3-8c6a-4eee-ab58-c7805873c0ee"):FireServer()
+task.wait(0.5)
 
-            -- Job auswählen
-            fire("aeb8d87a-20a0-48e5-8249-ddf516b4dbe8", "City Bus Driver")
+-- Schritt 3: City Bus Driver Job holen
+ReplicatedStorage:WaitForChild("Bnl"):WaitForChild("aeb8d87a-20a0-48e5-8249-ddf516b4dbe8"):FireServer("City Bus Driver")
+task.wait(0.5)
 
-            -- Dialog bestätigen
-            fire("69141aa3-8c6a-4eee-ab58-c7805873c0ee")
+-- Schritt 4: Wieder FireServer 1
+ReplicatedStorage:WaitForChild("Bnl"):WaitForChild("69141aa3-8c6a-4eee-ab58-c7805873c0ee"):FireServer()
+task.wait(0.5)
 
-            -- Schritt 2: Zum Schlüssel laufen
-            moveToPosition(Vector3.new(-1723, 6, -1266))
+-- Schritt 5: Zum Schlüssel laufen
+walkTo(vec(-1723, 6, -1266))
+task.wait(0.5)
 
-            -- Schlüssel abholen
-            fire("e8f3d225-1be6-487b-9572-36254957b902", "Mercedes Citaro Bus Driver")
+-- Schritt 6: Mercedes Citaro Bus holen
+ReplicatedStorage:WaitForChild("Bnl"):WaitForChild("e8f3d225-1be6-487b-9572-36254957b902"):FireServer("Mercedes Citaro Bus Driver")
 
-            -- Auto-Deaktivieren
-            Toggle:Set(false)
-         end)
-      end
    end,
 })
-
 
 local Button = MainTab:CreateButton({
    Name = "+WalkSpeed",
