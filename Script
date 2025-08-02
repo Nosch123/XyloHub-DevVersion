@@ -41,22 +41,11 @@ local DevTab = Window:CreateTab("Developer", nil) -- Title, Image
 local Section = DevTab:CreateSection("Main")
 
 local Toggle = DevTab:CreateToggle({
-   Name = "Autofarm (City Bus)",
+   Name = "Autofarm (city bus)",
    CurrentValue = false,
-   Flag = "Toggle1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+   Flag = "AFC", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
    Callback = function(Value)
-   -- Spieler-Setup
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid")
-local rootPart = character:WaitForChild("HumanoidRootPart")
-
--- Funktionen
-local function walkTo(targetPos)
-    local speedMultiplier = 4
-    local threshold = 5
- local Players = game:GetService("Players")
+  local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local PathfindingService = game:GetService("PathfindingService")
 local LocalPlayer = Players.LocalPlayer
@@ -109,7 +98,6 @@ moveToPosition(Vector3.new(-1723, 6, -1266))
 
 -- 🔑 Schlüssel abholen
 fire("e8f3d225-1be6-487b-9572-36254957b902", "Mercedes Citaro Bus Driver")
-
 
    end,
 })
