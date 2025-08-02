@@ -56,34 +56,60 @@ local rootPart = character:WaitForChild("HumanoidRootPart")
 local function walkTo(targetPos)
     local speedMultiplier = 4
     local threshold = 5
-    humanoid.WalkSpeed = 16 * speedMultiplier
+ local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local PathfindingService = game:GetService("PathfindingService")
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
 
-    local direction = (targetPos - rootPart.Position).Unit
-    while (rootPart.Position - targetPos).Magnitude > threshold do
-        rootPart.CFrame = CFrame.new(rootPart.Position + direction * 0.5, rootPart.Position + direction)
-        task.wait(0.03)
+-- Funktion zum Bewegen (realistisch)
+local function moveToPosition(pos)
+    local path = PathfindingService:CreatePath({
+        AgentRadius = 2,
+        AgentHeight = 5,
+        AgentCanJump = true,
+        AgentJumpHeight = 10,
+        AgentMaxSlope = 45
+    })
+
+    path:ComputeAsync(Character.HumanoidRootPart.Position, pos)
+
+    if path.Status == Enum.PathStatus.Complete then
+        for _, waypoint in ipairs(path:GetWaypoints()) do
+            Humanoid:MoveTo(waypoint.Position)
+            Humanoid.MoveToFinished:Wait()
+            task.wait(0.1) -- kleine Pause für mehr Human-Like Bewegung
+        end
+    else
+        warn("Path konnte nicht berechnet werden.")
     end
-
-    humanoid.WalkSpeed = 16
 end
 
--- Schritt 1: Zu Bus Job NPC
-walkTo(Vector3.new(-1731, 6, -1281))
-task.wait(0.2)
-game:GetService("ReplicatedStorage"):WaitForChild("Bnl"):WaitForChild("69141aa3-8c6a-4eee-ab58-c7805873c0ee"):FireServer()
+-- FireServer Wrapper mit Delay
+local function fire(remoteName, ...)
+    task.wait(math.random(0.4, 0.8)) -- zufälliger Delay für Legit-Vibes
+    ReplicatedStorage:WaitForChild("Bnl"):WaitForChild(remoteName):FireServer(...)
+end
 
--- Schritt 2: Job starten
-task.wait(0.4)
-game:GetService("ReplicatedStorage"):WaitForChild("Bnl"):WaitForChild("aeb8d87a-20a0-48e5-8249-ddf516b4dbe8"):FireServer("City Bus Driver")
+-- ✅ Schritt 1: Zum Bus Job NPC
+moveToPosition(Vector3.new(-1731, 6, -1281))
 
--- Schritt 3: Nochmal bestätigen
-task.wait(0.4)
-game:GetService("ReplicatedStorage"):WaitForChild("Bnl"):WaitForChild("69141aa3-8c6a-4eee-ab58-c7805873c0ee"):FireServer()
+-- ⏺️ Dialog starten
+fire("69141aa3-8c6a-4eee-ab58-c7805873c0ee")
 
--- Schritt 4: Zum Schlüssel
-walkTo(Vector3.new(-1723, 6, -1266))
-task.wait(0.3)
-game:GetService("ReplicatedStorage"):WaitForChild("Bnl"):WaitForChild("e8f3d225-1be6-487b-9572-36254957b902"):FireServer("Mercedes Citaro Bus Driver")
+-- ✅ Schritt 2: Job auswählen
+fire("aeb8d87a-20a0-48e5-8249-ddf516b4dbe8", "City Bus Driver")
+
+-- 🔁 Dialog bestätigen
+fire("69141aa3-8c6a-4eee-ab58-c7805873c0ee")
+
+-- ✅ Schritt 3: Zum Schlüssel laufen
+moveToPosition(Vector3.new(-1723, 6, -1266))
+
+-- 🔑 Schlüssel abholen
+fire("e8f3d225-1be6-487b-9572-36254957b902", "Mercedes Citaro Bus Driver")
+
 
    end,
 })
