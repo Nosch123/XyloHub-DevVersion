@@ -1,7 +1,7 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "XYLO AUTOFARM V1",
+   Name = "XYLO AUTOFARM",
    Icon = 0, -- Icon in Topbar. Can use Lucide Icons (string) or Roblox Image (number). 0 to use no icon (default).
    LoadingTitle = "XYLO AUTOFARM CITY BUS",
    LoadingSubtitle = "Dev version",
@@ -40,132 +40,141 @@ local Window = Rayfield:CreateWindow({
 local DevTab = Window:CreateTab("Developer", nil) -- Title, Image
 local Section = DevTab:CreateSection("Main")
 
-local Toggle = DevTab:CreateToggle({ 
-   Name = "AUTOFARM", 
-   CurrentValue = false,
-   Flag = "AFCB", 
-   Callback = function(Value)
-       if not Value then return end
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
 
-       local Players = game:GetService("Players")
-       local ReplicatedStorage = game:GetService("ReplicatedStorage")
-       local RunService = game:GetService("RunService")
-       local Workspace = game:GetService("Workspace")
+local player = Players.LocalPlayer
 
-       local player = Players.LocalPlayer
-       local character = player.Character or player.CharacterAdded:Wait()
-       local humanoid = character:WaitForChild("Humanoid")
-       local hrp = character:WaitForChild("HumanoidRootPart")
+local Toggle = DevTab:CreateToggle({
+    Name = "AUTOFARM",
+    CurrentValue = false,
+    Flag = "AFCB",
+    Callback = function(Value)
+        if not Value then return end
 
-       local function vec(x, y, z)
-           return Vector3.new(x, y, z)
-       end
+        local character = player.Character or player.CharacterAdded:Wait()
+        local humanoid = character:WaitForChild("Humanoid")
+        local hrp = character:WaitForChild("HumanoidRootPart")
 
-       local function noclip(enable)
-           for _, part in pairs(character:GetDescendants()) do
-               if part:IsA("BasePart") then
-                   part.CanCollide = not enable
-               end
-           end
-       end
+        local function vec(x, y, z)
+            return Vector3.new(x, y, z)
+        end
 
-       local function smoothWalk(destination)
-           local moveSpeed = 18
-           humanoid.WalkSpeed = moveSpeed
-           noclip(true)
-           humanoid:MoveTo(destination)
-           repeat
-               humanoid:MoveTo(destination)
-               RunService.Heartbeat:Wait()
-           until (hrp.Position - destination).Magnitude < 3
-           noclip(false)
-           task.wait(0.3)
-       end
+        local function noclip(enable)
+            for _, part in pairs(character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = not enable
+                end
+            end
+        end
 
-       local function moveBusArc(targetPos, arcHeight, travelTime, yRotation)
-           local vehicle = Workspace.Vehicles:FindFirstChild("Fndkdndiddn")
-           if not vehicle then return end
+        local function smoothWalk(destination)
+            local moveSpeed = 18
+            humanoid.WalkSpeed = moveSpeed
+            noclip(true)
+            humanoid:MoveTo(destination)
+            repeat
+                humanoid:MoveTo(destination)
+                RunService.Heartbeat:Wait()
+            until (hrp.Position - destination).Magnitude < 3
+            noclip(false)
+            task.wait(0.3)
+        end
 
-           local root = vehicle:FindFirstChild("DriveSeat")
-           if not root then return end
+        local function moveBusNatural(busModel, targetPos, duration)
+            local root = busModel:FindFirstChild("DriveSeat")
+            if not root then return end
 
-           local startPos = root.Position
-           local liftPos = Vector3.new(startPos.X, arcHeight, startPos.Z)
-           local dropPos = Vector3.new(targetPos.X, arcHeight, targetPos.Z)
-           local endPos = Vector3.new(targetPos.X, 10, targetPos.Z)
+            -- BodyVelocity & BodyGyro erzeugen oder wiederverwenden
+            local bv = root:FindFirstChild("BodyVelocity") or Instance.new("BodyVelocity")
+            bv.MaxForce = Vector3.new(1e5, 0, 1e5)
+            bv.Parent = root
 
-           local function lerpVec(a, b, t)
-               return a + (b - a) * t
-           end
+            local bg = root:FindFirstChild("BodyGyro") or Instance.new("BodyGyro")
+            bg.MaxTorque = Vector3.new(0, 1e5, 0)
+            bg.Parent = root
 
-           local rotation = CFrame.Angles(0, math.rad(yRotation or 0), 0)
+            local startPos = root.Position
+            local startTime = tick()
 
-           local liftTime = 0.7
-           local start = tick()
-           while tick() - start < liftTime do
-               local t = (tick() - start) / liftTime
-               local pos = lerpVec(startPos, liftPos, t)
-               root.CFrame = CFrame.new(pos) * rotation
-               RunService.Heartbeat:Wait()
-           end
+            while tick() - startTime < duration do
+                local alpha = (tick() - startTime) / duration
+                local desiredPos = startPos:Lerp(targetPos, alpha)
 
-           start = tick()
-           while tick() - start < travelTime do
-               local t = (tick() - start) / travelTime
-               local pos = lerpVec(liftPos, dropPos, t)
-               root.CFrame = CFrame.new(pos) * rotation
-               RunService.Heartbeat:Wait()
-           end
+                local direction = (desiredPos - root.Position)
+                -- Geschwindigkeit proportional zur Distanz
+                local velocity = Vector3.new(direction.X, 0, direction.Z) / RunService.Heartbeat:Wait()
 
-           start = tick()
-           while tick() - start < liftTime do
-               local t = (tick() - start) / liftTime
-               local pos = lerpVec(dropPos, endPos, t)
-               root.CFrame = CFrame.new(pos) * rotation
-               RunService.Heartbeat:Wait()
-           end
-       end
+                -- Begrenze die Geschwindigkeit, damit es nicht ruckelt
+                local maxSpeed = 30
+                if velocity.Magnitude > maxSpeed then
+                    velocity = velocity.Unit * maxSpeed
+                end
 
-       -- === AUTOFARM ABLAUF === --
+                bv.Velocity = velocity
 
-       smoothWalk(vec(-1731, 6, -1281)) -- Zum NPC
-       task.wait(0.5)
-       ReplicatedStorage.Bnl["69141aa3-8c6a-4eee-ab58-c7805873c0ee"]:FireServer()
-       task.wait(0.5)
-       ReplicatedStorage.Bnl["aeb8d87a-20a0-48e5-8249-ddf516b4dbe8"]:FireServer("City Bus Driver")
-       task.wait(0.5)
-       ReplicatedStorage.Bnl["69141aa3-8c6a-4eee-ab58-c7805873c0ee"]:FireServer()
-       task.wait(0.5)
+                if direction.Magnitude > 0.1 then
+                    local lookCFrame = CFrame.new(Vector3.new(), Vector3.new(direction.X, 0, direction.Z))
+                    bg.CFrame = CFrame.new(root.Position) * lookCFrame
+                end
 
-       smoothWalk(vec(-1723, 6, -1266)) -- Zum Schlüssel
-       task.wait(0.5)
+                RunService.Heartbeat:Wait()
+            end
 
-       ReplicatedStorage.Bnl["e8f3d225-1be6-487b-9572-36254957b902"]:FireServer("Mercedes Citaro Bus Driver")
-       task.wait(0.5)
+            bv:Destroy()
+            bg:Destroy()
 
-       smoothWalk(vec(-1735, 5, -1259)) -- Zum Bus
-       task.wait(1.5)
+            -- Final Position setzen
+            root.CFrame = CFrame.new(targetPos, targetPos + Vector3.new(0, 0, 1))
+        end
 
-       local seat = Workspace.Vehicles:WaitForChild("Fndkdndiddn"):WaitForChild("DriveSeat")
-       ReplicatedStorage.Bnl["fdffc7c3-4c83-4693-8a33-380ed2d60083"]:FireServer(seat, "Oj2", false)
-       task.wait(0.5)
+        -- Start Autofarm Abläufe
 
-       -- Motor starten
-       ReplicatedStorage.Bnl["1109ee8f-65c5-435b-9ad7-e13b83f79aeb"]:FireServer(
-           Workspace.Vehicles:WaitForChild("Fndkdndiddn"),
-           true
-       )
-       task.wait(0.5)
+        smoothWalk(vec(-1731, 6, -1281)) -- NPC
+        task.wait(0.5)
+        ReplicatedStorage.Bnl["69141aa3-8c6a-4eee-ab58-c7805873c0ee"]:FireServer()
+        task.wait(0.5)
+        ReplicatedStorage.Bnl["aeb8d87a-20a0-48e5-8249-ddf516b4dbe8"]:FireServer("City Bus Driver")
+        task.wait(0.5)
+        ReplicatedStorage.Bnl["69141aa3-8c6a-4eee-ab58-c7805873c0ee"]:FireServer()
+        task.wait(0.5)
 
-       -- Bus bewegen in Bögen mit Rotation
-       moveBusArc(vec(-510, 0, 831), 60, 30, 90)   -- nach Osten gedreht
-       task.wait(3)
-       moveBusArc(vec(112, 0, 1612), 60, 30, 180) -- nach Süden gedreht
+        smoothWalk(vec(-1723, 6, -1266)) -- Schlüssel
+        task.wait(0.5)
+        ReplicatedStorage.Bnl["e8f3d225-1be6-487b-9572-36254957b902"]:FireServer("Mercedes Citaro Bus Driver")
+        task.wait(0.5)
 
-       -- Toggle nach Ende aus
-       Toggle:Set(false)
-   end,
+        smoothWalk(vec(-1735, 5, -1259)) -- Bus
+        task.wait(1.5)
+
+        local bus = Workspace.Vehicles:WaitForChild("Fndkdndiddn")
+        local seat = bus:WaitForChild("DriveSeat")
+
+        ReplicatedStorage.Bnl["fdffc7c3-4c83-4693-8a33-380ed2d60083"]:FireServer(seat, "Oj2", false)
+        task.wait(0.5)
+
+        ReplicatedStorage.Bnl["1109ee8f-65c5-435b-9ad7-e13b83f79aeb"]:FireServer(bus, true)
+        task.wait(0.5)
+
+        -- Bus realistisch bewegen
+        moveBusNatural(bus, vec(-1723, 60, -1266), 10)
+        task.wait(2)
+        moveBusNatural(bus, vec(-510, 60, 831), 10)
+        task.wait(2)
+        moveBusNatural(bus, vec(-510, 10, 831), 10)
+        task.wait(2)
+        moveBusNatural(bus, vec(-510, 60, 831), 10)
+        task.wait(2)
+        moveBusNatural(bus, vec(112, 60, 1612), 10)
+        task.wait(2)
+        moveBusNatural(bus, vec(112, 10, 1612), 10)
+
+        Toggle:Set(false)
+    end,
 })
+
 
 
 
