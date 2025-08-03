@@ -103,7 +103,24 @@ local Toggle = DevTab:CreateToggle({
        task.wait(0.5)
        smoothWalk(vec(-1723, 6, -1266))
        task.wait(0.5)
-       ReplicatedStorage:WaitForChild("Bnl"):WaitForChild("e8f3d225-1be6-487b-9572-36254957b902"):FireServer("Mercedes Citaro Bus Driver")
+       -- Schritt 6.1: Simuliere "E" Interaktion mit dem Fahrzeug-Spawner
+local proximityPrompt = workspace:FindFirstChildWhichIsA("ProximityPrompt", true)
+if proximityPrompt then
+    fireproximityprompt(proximityPrompt)
+    task.wait(0.5)
+end
+
+-- Schritt 6.2: Wähle Fahrzeug über Remote
+ReplicatedStorage:WaitForChild("Bnl"):WaitForChild("e8f3d225-1be6-487b-9572-36254957b902"):FireServer("Mercedes Citaro Bus Driver")
+
+-- Optional: Warte, bis Bus wirklich gespawnt wurde
+local busModel
+for i = 1, 50 do
+    busModel = workspace:FindFirstChild("Mercedes Citaro Bus")
+    if busModel then break end
+    task.wait(0.1)
+end
+
 
        -- Autofarm abschalten nach Durchlauf (optional)
        Toggle:Set(false)
