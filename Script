@@ -50,10 +50,14 @@ local player = Players.LocalPlayer
 local Toggle = DevTab:CreateToggle({ 
    Name = "AUTOFARM", 
    CurrentValue = false,
-   Flag = "AFCB",
+   Flag = "AFCB", 
    Callback = function(Value)
        if not Value then return end
 
+       local Players = game:GetService("Players")
+       local ReplicatedStorage = game:GetService("ReplicatedStorage")
+       local RunService = game:GetService("RunService")
+       local player = Players.LocalPlayer
        local character = player.Character or player.CharacterAdded:Wait()
        local humanoid = character:WaitForChild("Humanoid")
        local hrp = character:WaitForChild("HumanoidRootPart")
@@ -71,69 +75,55 @@ local Toggle = DevTab:CreateToggle({
        end
 
        local function smoothWalk(destination)
-           local speed = 18
-           humanoid.WalkSpeed = speed
-
+           local moveSpeed = 18
+           humanoid.WalkSpeed = moveSpeed
            noclip(true)
            humanoid:MoveTo(destination)
-
-           while (hrp.Position - destination).Magnitude > 3 do
+           repeat
                humanoid:MoveTo(destination)
                RunService.Heartbeat:Wait()
-           end
-
+           until (hrp.Position - destination).Magnitude < 3
            noclip(false)
            task.wait(0.3)
        end
 
-       -- 1. Zum Job-NPC laufen
+       -- Schritt 1: Zum NPC
        smoothWalk(vec(-1731, 6, -1281))
        task.wait(0.5)
 
-       -- 2. Job beitreten
-       ReplicatedStorage.Bnl["69141aa3-8c6a-4eee-ab58-c7805873c0ee"]:FireServer()
-       task.wait(0.5)
-       ReplicatedStorage.Bnl["aeb8d87a-20a0-48e5-8249-ddf516b4dbe8"]:FireServer("City Bus Driver")
-       task.wait(0.5)
+       -- Schritt 2: FireServer 1
        ReplicatedStorage.Bnl["69141aa3-8c6a-4eee-ab58-c7805873c0ee"]:FireServer()
        task.wait(0.5)
 
-       -- 3. Schlüssel holen
+       -- Schritt 3: Job auswählen
+       ReplicatedStorage.Bnl["aeb8d87a-20a0-48e5-8249-ddf516b4dbe8"]:FireServer("City Bus Driver")
+       task.wait(0.5)
+
+       -- Schritt 4: Wieder FireServer 1
+       ReplicatedStorage.Bnl["69141aa3-8c6a-4eee-ab58-c7805873c0ee"]:FireServer()
+       task.wait(0.5)
+
+       -- Schritt 5: Zum Key holen
        smoothWalk(vec(-1723, 6, -1266))
        task.wait(0.5)
 
-       local prompt = workspace:FindFirstChildWhichIsA("ProximityPrompt", true)
-       if prompt then
-           fireproximityprompt(prompt)
-           task.wait(0.5)
-       end
-
-       -- 4. Fahrzeug auswählen
+       -- Schritt 6: Fahrzeug auswählen
        ReplicatedStorage.Bnl["e8f3d225-1be6-487b-9572-36254957b902"]:FireServer("Mercedes Citaro Bus Driver")
        task.wait(0.5)
 
-       -- 5. Zum Fahrzeug laufen
+       -- Schritt 7: Zum Bus laufen
        smoothWalk(vec(-1735, 5, -1259))
-       task.wait(0.5)
+       task.wait(1.5)
 
-       -- 6. Sitz einnehmen
-       local seat
-       for _, v in pairs(Workspace.Vehicles:GetChildren()) do
-           local found = v:FindFirstChild("DriveSeat", true)
-           if found then
-               seat = found
-               break
-           end
-       end
+       -- Schritt 8: Einsteigen
+       local seat = workspace.Vehicles:WaitForChild("Fndkdndiddn"):WaitForChild("DriveSeat")
+       ReplicatedStorage.Bnl["fdffc7c3-4c83-4693-8a33-380ed2d60083"]:FireServer(seat, "Oj2", false)
 
-       if seat then
-           ReplicatedStorage.Bnl["fdffc7c3-4c83-4693-8a33-380ed2d60083"]:FireServer(seat, "Oj2", false)
-       end
-
-       -- Toggle zurücksetzen
+       -- Schritt 9: Toggle aus
        Toggle:Set(false)
    end,
 })
+
 
 
 
