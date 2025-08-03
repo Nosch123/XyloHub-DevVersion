@@ -43,26 +43,25 @@ local Section = DevTab:CreateSection("Main")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
 
 local player = Players.LocalPlayer
 
 local Toggle = DevTab:CreateToggle({ 
    Name = "AUTOFARM", 
    CurrentValue = false,
-   Flag = "AFCB", 
+   Flag = "AFCB",
    Callback = function(Value)
-       if not Value then return end -- Nur ausführen, wenn aktiviert
+       if not Value then return end
 
        local character = player.Character or player.CharacterAdded:Wait()
        local humanoid = character:WaitForChild("Humanoid")
        local hrp = character:WaitForChild("HumanoidRootPart")
 
-       -- Position Utility
        local function vec(x, y, z)
            return Vector3.new(x, y, z)
        end
 
-       -- NoClip-Funktion (ein/aus)
        local function noclip(enable)
            for _, part in pairs(character:GetDescendants()) do
                if part:IsA("BasePart") then
@@ -71,19 +70,14 @@ local Toggle = DevTab:CreateToggle({
            end
        end
 
-       -- Smooth & menschliches Movement
        local function smoothWalk(destination)
-           local moveSpeed = 16 * 1.2
-           humanoid.WalkSpeed = moveSpeed
-
-           local distance = (hrp.Position - destination).Magnitude
-           local duration = distance / moveSpeed
-           local start = tick()
+           local speed = 18
+           humanoid.WalkSpeed = speed
 
            noclip(true)
            humanoid:MoveTo(destination)
 
-           while tick() - start < duration and (hrp.Position - destination).Magnitude > 3 do
+           while (hrp.Position - destination).Magnitude > 3 do
                humanoid:MoveTo(destination)
                RunService.Heartbeat:Wait()
            end
@@ -92,39 +86,54 @@ local Toggle = DevTab:CreateToggle({
            task.wait(0.3)
        end
 
-       -- Reihenfolge der Aufgaben
+       -- 1. Zum Job-NPC laufen
        smoothWalk(vec(-1731, 6, -1281))
        task.wait(0.5)
-       ReplicatedStorage:WaitForChild("Bnl"):WaitForChild("69141aa3-8c6a-4eee-ab58-c7805873c0ee"):FireServer()
+
+       -- 2. Job beitreten
+       ReplicatedStorage.Bnl["69141aa3-8c6a-4eee-ab58-c7805873c0ee"]:FireServer()
        task.wait(0.5)
-       ReplicatedStorage:WaitForChild("Bnl"):WaitForChild("aeb8d87a-20a0-48e5-8249-ddf516b4dbe8"):FireServer("City Bus Driver")
+       ReplicatedStorage.Bnl["aeb8d87a-20a0-48e5-8249-ddf516b4dbe8"]:FireServer("City Bus Driver")
        task.wait(0.5)
-       ReplicatedStorage:WaitForChild("Bnl"):WaitForChild("69141aa3-8c6a-4eee-ab58-c7805873c0ee"):FireServer()
+       ReplicatedStorage.Bnl["69141aa3-8c6a-4eee-ab58-c7805873c0ee"]:FireServer()
        task.wait(0.5)
+
+       -- 3. Schlüssel holen
        smoothWalk(vec(-1723, 6, -1266))
        task.wait(0.5)
-       -- Schritt 6.1: Simuliere "E" Interaktion mit dem Fahrzeug-Spawner
-local proximityPrompt = workspace:FindFirstChildWhichIsA("ProximityPrompt", true)
-if proximityPrompt then
-    fireproximityprompt(proximityPrompt)
-    task.wait(0.5)
-end
 
--- Schritt 6.2: Wähle Fahrzeug über Remote
-ReplicatedStorage:WaitForChild("Bnl"):WaitForChild("e8f3d225-1be6-487b-9572-36254957b902"):FireServer("Mercedes Citaro Bus Driver")
+       local prompt = workspace:FindFirstChildWhichIsA("ProximityPrompt", true)
+       if prompt then
+           fireproximityprompt(prompt)
+           task.wait(0.5)
+       end
 
--- Optional: Warte, bis Bus wirklich gespawnt wurde
-local busModel
-for i = 1, 50 do
-    busModel = workspace:FindFirstChild("Mercedes Citaro Bus")
-    if busModel then break end
-    task.wait(0.1)
-end
+       -- 4. Fahrzeug auswählen
+       ReplicatedStorage.Bnl["e8f3d225-1be6-487b-9572-36254957b902"]:FireServer("Mercedes Citaro Bus Driver")
+       task.wait(0.5)
 
+       -- 5. Zum Fahrzeug laufen
+       smoothWalk(vec(-1735, 5, -1259))
+       task.wait(0.5)
 
-       -- Autofarm abschalten nach Durchlauf (optional)
+       -- 6. Sitz einnehmen
+       local seat
+       for _, v in pairs(Workspace.Vehicles:GetChildren()) do
+           local found = v:FindFirstChild("DriveSeat", true)
+           if found then
+               seat = found
+               break
+           end
+       end
+
+       if seat then
+           ReplicatedStorage.Bnl["fdffc7c3-4c83-4693-8a33-380ed2d60083"]:FireServer(seat, "Oj2", false)
+       end
+
+       -- Toggle zurücksetzen
        Toggle:Set(false)
    end,
 })
+
 
 
