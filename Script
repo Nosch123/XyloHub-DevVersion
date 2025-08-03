@@ -40,13 +40,6 @@ local Window = Rayfield:CreateWindow({
 local DevTab = Window:CreateTab("Developer", nil) -- Title, Image
 local Section = DevTab:CreateSection("Main")
 
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
-local Workspace = game:GetService("Workspace")
-
-local player = Players.LocalPlayer
-
 local Toggle = DevTab:CreateToggle({ 
    Name = "AUTOFARM", 
    CurrentValue = false,
@@ -58,6 +51,7 @@ local Toggle = DevTab:CreateToggle({
        local ReplicatedStorage = game:GetService("ReplicatedStorage")
        local RunService = game:GetService("RunService")
        local Workspace = game:GetService("Workspace")
+
        local player = Players.LocalPlayer
        local character = player.Character or player.CharacterAdded:Wait()
        local humanoid = character:WaitForChild("Humanoid")
@@ -88,86 +82,91 @@ local Toggle = DevTab:CreateToggle({
            task.wait(0.3)
        end
 
-       -- Schritt 1: Zum NPC
-       smoothWalk(vec(-1731, 6, -1281))
-       task.wait(0.5)
+       -- Flug-Bewegung des Busses in Bogenform (Y-Hub)
+       local function moveBusArc(targetPos, arcHeight, travelTime)
+           local vehicle = Workspace.Vehicles:FindFirstChild("Fndkdndiddn")
+           if not vehicle then return end
 
-       -- Schritt 2: FireServer 1
+           local root = vehicle:FindFirstChild("DriveSeat")
+           if not root then return end
+
+           local startPos = root.Position
+           local liftPos = Vector3.new(startPos.X, arcHeight, startPos.Z)
+           local dropPos = Vector3.new(targetPos.X, arcHeight, targetPos.Z)
+           local endPos = Vector3.new(targetPos.X, 10, targetPos.Z)
+
+           -- smooth transition helper
+           local function lerpVec(a, b, t)
+               return a + (b - a) * t
+           end
+
+           -- Step 1: Hochheben
+           local liftTime = 0.7
+           local start = tick()
+           while tick() - start < liftTime do
+               local t = (tick() - start) / liftTime
+               root.CFrame = CFrame.new(lerpVec(startPos, liftPos, t))
+               RunService.Heartbeat:Wait()
+           end
+
+           -- Step 2: Travel in 10 Sek
+           start = tick()
+           while tick() - start < travelTime do
+               local t = (tick() - start) / travelTime
+               root.CFrame = CFrame.new(lerpVec(liftPos, dropPos, t))
+               RunService.Heartbeat:Wait()
+           end
+
+           -- Step 3: Absenken
+           start = tick()
+           while tick() - start < liftTime do
+               local t = (tick() - start) / liftTime
+               root.CFrame = CFrame.new(lerpVec(dropPos, endPos, t))
+               RunService.Heartbeat:Wait()
+           end
+       end
+
+       -- === AUTOFARM ABLAUF === --
+
+       smoothWalk(vec(-1731, 6, -1281)) -- Zum NPC
+       task.wait(0.5)
        ReplicatedStorage.Bnl["69141aa3-8c6a-4eee-ab58-c7805873c0ee"]:FireServer()
        task.wait(0.5)
-
-       -- Schritt 3: Job auswählen
        ReplicatedStorage.Bnl["aeb8d87a-20a0-48e5-8249-ddf516b4dbe8"]:FireServer("City Bus Driver")
        task.wait(0.5)
-
-       -- Schritt 4: Wieder FireServer 1
        ReplicatedStorage.Bnl["69141aa3-8c6a-4eee-ab58-c7805873c0ee"]:FireServer()
        task.wait(0.5)
 
-       -- Schritt 5: Zum Key holen
-       smoothWalk(vec(-1723, 6, -1266))
+       smoothWalk(vec(-1723, 6, -1266)) -- Zum Schlüssel
        task.wait(0.5)
 
-       -- Schritt 6: Fahrzeug auswählen
        ReplicatedStorage.Bnl["e8f3d225-1be6-487b-9572-36254957b902"]:FireServer("Mercedes Citaro Bus Driver")
        task.wait(0.5)
 
-       -- Schritt 7: Zum Bus laufen
-       smoothWalk(vec(-1735, 5, -1259))
+       smoothWalk(vec(-1735, 5, -1259)) -- Zum Bus
        task.wait(1.5)
 
-       -- Schritt 8: Einsteigen
        local seat = Workspace.Vehicles:WaitForChild("Fndkdndiddn"):WaitForChild("DriveSeat")
        ReplicatedStorage.Bnl["fdffc7c3-4c83-4693-8a33-380ed2d60083"]:FireServer(seat, "Oj2", false)
-       task.wait(1)
+       task.wait(0.5)
 
-       -- Schritt 9: Bus starten
-       local args = {
+       -- Motor starten
+       ReplicatedStorage.Bnl["1109ee8f-65c5-435b-9ad7-e13b83f79aeb"]:FireServer(
            Workspace.Vehicles:WaitForChild("Fndkdndiddn"),
            true
-       }
-       ReplicatedStorage.Bnl["1109ee8f-65c5-435b-9ad7-e13b83f79aeb"]:FireServer(unpack(args))
-       task.wait(1)
+       )
+       task.wait(0.5)
 
-       -- Schritt 10: Bus bewegen (realistisch aber schnell)
-       local bus = Workspace.Vehicles:WaitForChild("Fndkdndiddn")
-       local primaryPart = bus.PrimaryPart or bus:FindFirstChild("PrimaryPart") or bus:FindFirstChildWhichIsA("BasePart")
-       if not primaryPart then return end
-
-       local function moveBusSmooth(destination, duration)
-           local startPos = primaryPart.Position
-           local startTime = tick()
-           while tick() - startTime < duration do
-               local alpha = (tick() - startTime) / duration
-               primaryPart.CFrame = CFrame.new(startPos:Lerp(destination, alpha), destination)
-               RunService.Heartbeat:Wait()
-           end
-           primaryPart.CFrame = CFrame.new(destination, destination)
-       end
-
-       -- Erstes Ziel
-       moveBusSmooth(vec(-1723,60,-1266), 30)
+       -- Bus bewegen in Bögen
+       moveBusArc(vec(-510, 0, 831), 60, 10)
        task.wait(3)
+       moveBusArc(vec(112, 0, 1612), 60, 10)
 
-       moveBusSmooth(vec(-510, 60, 831), 30)
-       task.wait(3)
-
-       moveBusSmooth(vec(-510, 10, 831), 30)
-       task.wait(3)
-
-       -- Zweites Ziel
-       moveBusSmooth(vec(-510, 60, 831), 30)
-       task.wait(3)
-       
-       moveBusSmooth(vec(112, 60, 1612), 30)
-       task.wait(3)
-
-       moveBusSmooth(vec(112, 10, 1612), 30)
-
-       -- Schritt 11: Toggle deaktivieren
+       -- Toggle nach Ende aus
        Toggle:Set(false)
    end,
 })
+
 
 
 
