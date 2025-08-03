@@ -146,15 +146,28 @@ local Toggle = DevTab:CreateToggle({
        end
 
        -- Erstes Ziel
+       moveBusSmooth(vec(-1723,60,-1266), 30)
+       task.wait(3)
+
+       moveBusSmooth(vec(-510, 60, 831), 30)
+       task.wait(3)
+
        moveBusSmooth(vec(-510, 10, 831), 30)
        task.wait(3)
 
        -- Zweites Ziel
+       moveBusSmooth(vec(-510, 60, 831), 30)
+       task.wait(3)
+       
+       moveBusSmooth(vec(112, 60, 1612), 30)
+
        moveBusSmooth(vec(112, 10, 1612), 30)
+       task.wait(3)
 
        -- Schritt 11: Toggle deaktivieren
        Toggle:Set(false)
    end,
+})
 })
 
 
