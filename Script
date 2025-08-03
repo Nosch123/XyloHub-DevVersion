@@ -82,8 +82,7 @@ local Toggle = DevTab:CreateToggle({
            task.wait(0.3)
        end
 
-       -- Flug-Bewegung des Busses in Bogenform (Y-Hub)
-       local function moveBusArc(targetPos, arcHeight, travelTime)
+       local function moveBusArc(targetPos, arcHeight, travelTime, yRotation)
            local vehicle = Workspace.Vehicles:FindFirstChild("Fndkdndiddn")
            if not vehicle then return end
 
@@ -95,33 +94,34 @@ local Toggle = DevTab:CreateToggle({
            local dropPos = Vector3.new(targetPos.X, arcHeight, targetPos.Z)
            local endPos = Vector3.new(targetPos.X, 10, targetPos.Z)
 
-           -- smooth transition helper
            local function lerpVec(a, b, t)
                return a + (b - a) * t
            end
 
-           -- Step 1: Hochheben
+           local rotation = CFrame.Angles(0, math.rad(yRotation or 0), 0)
+
            local liftTime = 0.7
            local start = tick()
            while tick() - start < liftTime do
                local t = (tick() - start) / liftTime
-               root.CFrame = CFrame.new(lerpVec(startPos, liftPos, t))
+               local pos = lerpVec(startPos, liftPos, t)
+               root.CFrame = CFrame.new(pos) * rotation
                RunService.Heartbeat:Wait()
            end
 
-           -- Step 2: Travel in 10 Sek
            start = tick()
            while tick() - start < travelTime do
                local t = (tick() - start) / travelTime
-               root.CFrame = CFrame.new(lerpVec(liftPos, dropPos, t))
+               local pos = lerpVec(liftPos, dropPos, t)
+               root.CFrame = CFrame.new(pos) * rotation
                RunService.Heartbeat:Wait()
            end
 
-           -- Step 3: Absenken
            start = tick()
            while tick() - start < liftTime do
                local t = (tick() - start) / liftTime
-               root.CFrame = CFrame.new(lerpVec(dropPos, endPos, t))
+               local pos = lerpVec(dropPos, endPos, t)
+               root.CFrame = CFrame.new(pos) * rotation
                RunService.Heartbeat:Wait()
            end
        end
@@ -157,15 +157,16 @@ local Toggle = DevTab:CreateToggle({
        )
        task.wait(0.5)
 
-       -- Bus bewegen in Bögen
-       moveBusArc(vec(-510, 0, 831), 60, 10)
+       -- Bus bewegen in Bögen mit Rotation
+       moveBusArc(vec(-510, 0, 831), 60, 30, 90)   -- nach Osten gedreht
        task.wait(3)
-       moveBusArc(vec(112, 0, 1612), 60, 10)
+       moveBusArc(vec(112, 0, 1612), 60, 30, 180) -- nach Süden gedreht
 
        -- Toggle nach Ende aus
        Toggle:Set(false)
    end,
 })
+
 
 
 
