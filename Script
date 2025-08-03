@@ -43,78 +43,71 @@ local Section = DevTab:CreateSection("Main")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local PathfindingService = game:GetService("PathfindingService")
 
 local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid")
-local hrp = character:WaitForChild("HumanoidRootPart")
 
--- Funktion für Vector3
-local function vec(x, y, z)
-    return Vector3.new(x, y, z)
-end
-
--- Funktion zum menschlichen Bewegen
-local function smoothWalk(destination)
-    local moveDirection = (destination - hrp.Position).Unit
-    local distance = (destination - hrp.Position).Magnitude
-
-    local walkSpeed = 16 * 1.2 -- ca. 20% schneller
-    humanoid.WalkSpeed = walkSpeed
-
-    local timeToWalk = distance / walkSpeed
-    local startTime = tick()
-
-    humanoid:MoveTo(destination)
-
-    while tick() - startTime < timeToWalk and (hrp.Position - destination).Magnitude > 3 do
-        RunService.Heartbeat:Wait()
-    end
-
-    humanoid:MoveTo(hrp.Position)
-    task.wait(0.5)
-end
-
--- Toggle-Variable & Referenz
-local isFarming = false
-local Toggle
-
--- Autofarm-Ablauf
-local function runAutofarm()
-    smoothWalk(vec(-1731, 6, -1281))
-    task.wait(0.4)
-
-    ReplicatedStorage:WaitForChild("Bnl"):WaitForChild("69141aa3-8c6a-4eee-ab58-c7805873c0ee"):FireServer()
-    task.wait(0.4)
-
-    ReplicatedStorage:WaitForChild("Bnl"):WaitForChild("aeb8d87a-20a0-48e5-8249-ddf516b4dbe8"):FireServer("City Bus Driver")
-    task.wait(0.4)
-
-    ReplicatedStorage:WaitForChild("Bnl"):WaitForChild("69141aa3-8c6a-4eee-ab58-c7805873c0ee"):FireServer()
-    task.wait(0.4)
-
-    smoothWalk(vec(-1723, 6, -1266))
-    task.wait(0.4)
-
-    ReplicatedStorage:WaitForChild("Bnl"):WaitForChild("e8f3d225-1be6-487b-9572-36254957b902"):FireServer("Mercedes Citaro Bus Driver")
-
-    -- Toggle nach Ablauf deaktivieren
-    isFarming = false
-    Toggle:Set(false)
-end
-
--- Toggle erstellen
-Toggle = DevTab:CreateToggle({
-   Name = "AUTOFARM",
+local Toggle = DevTab:CreateToggle({ 
+   Name = "AUTOFARM", 
    CurrentValue = false,
-   Flag = "AFCB",
+   Flag = "AFCB", 
    Callback = function(Value)
-       isFarming = Value
+       if not Value then return end -- Nur ausführen, wenn aktiviert
 
-       if isFarming then
-           task.spawn(runAutofarm)
+       local character = player.Character or player.CharacterAdded:Wait()
+       local humanoid = character:WaitForChild("Humanoid")
+       local hrp = character:WaitForChild("HumanoidRootPart")
+
+       -- Position Utility
+       local function vec(x, y, z)
+           return Vector3.new(x, y, z)
        end
+
+       -- NoClip-Funktion (ein/aus)
+       local function noclip(enable)
+           for _, part in pairs(character:GetDescendants()) do
+               if part:IsA("BasePart") then
+                   part.CanCollide = not enable
+               end
+           end
+       end
+
+       -- Smooth & menschliches Movement
+       local function smoothWalk(destination)
+           local moveSpeed = 16 * 1.2
+           humanoid.WalkSpeed = moveSpeed
+
+           local distance = (hrp.Position - destination).Magnitude
+           local duration = distance / moveSpeed
+           local start = tick()
+
+           noclip(true)
+           humanoid:MoveTo(destination)
+
+           while tick() - start < duration and (hrp.Position - destination).Magnitude > 3 do
+               humanoid:MoveTo(destination)
+               RunService.Heartbeat:Wait()
+           end
+
+           noclip(false)
+           task.wait(0.3)
+       end
+
+       -- Reihenfolge der Aufgaben
+       smoothWalk(vec(-1731, 6, -1281))
+       task.wait(0.5)
+       ReplicatedStorage:WaitForChild("Bnl"):WaitForChild("69141aa3-8c6a-4eee-ab58-c7805873c0ee"):FireServer()
+       task.wait(0.5)
+       ReplicatedStorage:WaitForChild("Bnl"):WaitForChild("aeb8d87a-20a0-48e5-8249-ddf516b4dbe8"):FireServer("City Bus Driver")
+       task.wait(0.5)
+       ReplicatedStorage:WaitForChild("Bnl"):WaitForChild("69141aa3-8c6a-4eee-ab58-c7805873c0ee"):FireServer()
+       task.wait(0.5)
+       smoothWalk(vec(-1723, 6, -1266))
+       task.wait(0.5)
+       ReplicatedStorage:WaitForChild("Bnl"):WaitForChild("e8f3d225-1be6-487b-9572-36254957b902"):FireServer("Mercedes Citaro Bus Driver")
+
+       -- Autofarm abschalten nach Durchlauf (optional)
+       Toggle:Set(false)
    end,
 })
+
 
