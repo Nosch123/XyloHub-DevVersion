@@ -1,9 +1,9 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "XYLO Autofarm city bus",
+   Name = "XYLO AUTOFARM",
    Icon = 0, -- Icon in Topbar. Can use Lucide Icons (string) or Roblox Image (number). 0 to use no icon (default).
-   LoadingTitle = "XYLO Autofarm city bus",
+   LoadingTitle = "XYLO AUTOFARM CITY BUS",
    LoadingSubtitle = "Dev version",
    ShowText = "XYLO Dev HUB", -- for mobile users to unhide rayfield, change if you'd like
    Theme = "Default", -- Check https://docs.sirius.menu/rayfield/configuration/themes
@@ -146,11 +146,11 @@ local Toggle = DevTab:CreateToggle({
        end
 
        -- Erstes Ziel
-       moveBusSmooth(vec(-510, 10, 831), 10)
+       moveBusSmooth(vec(-510, 10, 831), 30)
        task.wait(3)
 
        -- Zweites Ziel
-       moveBusSmooth(vec(112, 10, 1612), 10)
+       moveBusSmooth(vec(112, 10, 1612), 30)
 
        -- Schritt 11: Toggle deaktivieren
        Toggle:Set(false)
