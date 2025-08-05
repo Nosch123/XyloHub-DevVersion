@@ -135,6 +135,12 @@ local Toggle = DevTab:CreateToggle({
         ReplicatedStorage.Bnl["e8f3d225-1be6-487b-9572-36254957b902"]:FireServer("Mercedes Citaro Bus Driver")
         task.wait(0.5)
 
+        walkTo(vec(-1716, 6, -1267))
+        task.wait(0.5)
+
+        walkTo(vec(-1715, 5, -1256))
+        task.wait(0.5)
+
         walkTo(vec(-1735, 5, -1259))
         task.wait(1)
 
