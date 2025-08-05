@@ -40,21 +40,17 @@ local Window = Rayfield:CreateWindow({
 local DevTab = Window:CreateTab("Developer", nil) -- Title, Image
 local Section = DevTab:CreateSection("Main")
 
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
-local Workspace = game:GetService("Workspace")
 local TweenService = game:GetService("TweenService")
-
-local player = Players.LocalPlayer
+local Workspace = game:GetService("Workspace")
 
 -- ================================
 -- Konfiguration
 -- ================================
+local BUS_NAME = "Fndkdndiddn" -- Name deines Busses im Workspace.Vehicles
 local TWEEN_SPEED = 0.1 -- Sekunde pro Studeneinheit (je niedriger, desto schneller)
 
 -- ================================
--- UI-Callback
+-- Toggle aktivieren
 -- ================================
 local Toggle = DevTab:CreateToggle({
     Name = "AUTOFARM",
@@ -63,54 +59,21 @@ local Toggle = DevTab:CreateToggle({
     Callback = function(Value)
         if not Value then return end
 
-        local character = player.Character or player.CharacterAdded:Wait()
-        local humanoid = character:WaitForChild("Humanoid")
-        local hrp = character:WaitForChild("HumanoidRootPart")
+        -- Warten bis Bus geladen ist
+        local bus = Workspace.Vehicles:WaitForChild(BUS_NAME)
+        local primary = bus.PrimaryPart or bus:FindFirstChild("DriveSeat")
+        if not primary then warn("Bus hat keine gültige PrimaryPart!"); return end
 
-        local function vec(x, y, z)
-            return Vector3.new(x, y, z)
-        end
-
-        local function walkTo(position)
-            humanoid:MoveTo(position)
-            local conn
-            local reached = false
-
-            conn = humanoid.MoveToFinished:Connect(function(success)
-                reached = success
-            end)
-
-            while not reached and (hrp.Position - position).Magnitude > 2 do
-                RunService.Heartbeat:Wait()
-            end
-
-            conn:Disconnect()
-            task.wait(math.random(2, 4) / 10)
-        end
-
-        local function sitInSeat(seat)
-            if seat and seat:IsA("Seat") then
-                hrp.CFrame = seat.CFrame * CFrame.new(0, 2, 0)
-                task.wait(0.2)
-                humanoid.Sit = true
-            end
-        end
-
-        local function tweenMove(model, targetPos)
-            local primary = model.PrimaryPart or model:FindFirstChild("DriveSeat")
-            if not primary then return end
-
-            -- Ziel-CFrame mit Rotation in Richtung Zielpunkt
+        -- Tween-Move Funktion mit Rotation
+        local function tweenMove(targetPos)
             local currentPos = primary.Position
-            local lookDirection = (targetPos - currentPos).Unit
-            local rotation = CFrame.new(Vector3.zero, lookDirection)
+            local direction = (targetPos - currentPos).Unit
+            local rotation = CFrame.new(Vector3.zero, direction)
             local finalCFrame = CFrame.new(targetPos) * CFrame.Angles(0, rotation.Y, 0)
 
-            -- Dauer berechnen basierend auf Distanz & Speed
-            local distance = (currentPos - targetPos).Magnitude
+            local distance = (targetPos - currentPos).Magnitude
             local duration = distance * TWEEN_SPEED
 
-            -- Tween
             local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Linear)
             local goal = {CFrame = finalCFrame}
             local tween = TweenService:Create(primary, tweenInfo, goal)
@@ -118,41 +81,9 @@ local Toggle = DevTab:CreateToggle({
             tween.Completed:Wait()
         end
 
-        -----------------------------------------
-        -- Starte den Autofarm
-        -----------------------------------------
-        walkTo(vec(-1731, 6, -1281))
-        task.wait(0.6 + math.random())
-        ReplicatedStorage.Bnl["69141aa3-8c6a-4eee-ab58-c7805873c0ee"]:FireServer()
-        task.wait(0.5)
-        ReplicatedStorage.Bnl["aeb8d87a-20a0-48e5-8249-ddf516b4dbe8"]:FireServer("City Bus Driver")
-        task.wait(0.5)
-        ReplicatedStorage.Bnl["69141aa3-8c6a-4eee-ab58-c7805873c0ee"]:FireServer()
-        task.wait(0.5)
+        -- Zielpunkte
+        local function vec(x, y, z) return Vector3.new(x, y, z) end
 
-        walkTo(vec(-1723, 6, -1266))
-        task.wait(0.4)
-        ReplicatedStorage.Bnl["e8f3d225-1be6-487b-9572-36254957b902"]:FireServer("Mercedes Citaro Bus Driver")
-        task.wait(0.5)
-
-        walkTo(vec(-1716, 6, -1267))
-        task.wait(0.5)
-
-        walkTo(vec(-1715, 5, -1256))
-        task.wait(0.5)
-
-        walkTo(vec(-1735, 5, -1259))
-        task.wait(1)
-
-        local bus = Workspace.Vehicles:WaitForChild("Fndkdndiddn")
-        local seat = bus:WaitForChild("DriveSeat")
-
-        ReplicatedStorage.Bnl["fdffc7c3-4c83-4693-8a33-380ed2d60083"]:FireServer(seat, "Oj2", false)
-        task.wait(0.5)
-        ReplicatedStorage.Bnl["1109ee8f-65c5-435b-9ad7-e13b83f79aeb"]:FireServer(bus, true)
-        task.wait(1)
-
-        -- Fahrpunkte definieren
         local points = {
             vec(-1723, 60, -1266),
             vec(-510, 60, 831),
@@ -163,16 +94,13 @@ local Toggle = DevTab:CreateToggle({
         }
 
         for _, point in ipairs(points) do
-            tweenMove(bus, point)
+            tweenMove(point)
             task.wait(1)
         end
 
         Toggle:Set(false)
     end,
 })
-
-
-
 
 
 
