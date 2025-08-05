@@ -60,7 +60,7 @@ local Toggle = DevTab:CreateToggle({
         if not Value then return end
 
         -- Warten bis Bus geladen ist
-        local bus = Workspace.Vehicles:WaitForChild(BUS_NAME)
+        local bus = Workspace.Vehicles:WaitForChild(Zuvjcbdj)
         local primary = bus.PrimaryPart or bus:FindFirstChild("DriveSeat")
         if not primary then warn("Bus hat keine gültige PrimaryPart!"); return end
 
