@@ -77,7 +77,7 @@ local function tweenTo(targetPosition)
 end
 
 -- Rayfield-Toggle
-local Toggle = DevTab:CreateToggle({ 
+local Toggle = Section:CreateToggle({ 
     Name = "Autofarm CB", 
     CurrentValue = false,
     Flag = "Toggle1",
