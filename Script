@@ -41,66 +41,64 @@ local DevTab = Window:CreateTab("Developer", nil) -- Title, Image
 local Section = DevTab:CreateSection("Main")
 
 local TweenService = game:GetService("TweenService")
-local Workspace = game:GetService("Workspace")
 
--- ================================
--- Konfiguration
--- ================================
-local BUS_NAME = "Fndkdndiddn" -- Name deines Busses im Workspace.Vehicles
-local TWEEN_SPEED = 0.1 -- Sekunde pro Studeneinheit (je niedriger, desto schneller)
+local bus = workspace:WaitForChild("Fndkdndiddn")
+local seat = bus:WaitForChild("DriveSeat")
 
--- ================================
--- Toggle aktivieren
--- ================================
-local Toggle = DevTab:CreateToggle({
-    Name = "AUTOFARM",
+-- Punkte, die abgeflogen werden
+local points = {
+    Vector3.new(-518.2562, 10.1831, 829.0701),
+    Vector3.new(112, 10, 1612),
+}
+
+-- Primärteil setzen, falls noch nicht gesetzt
+if not bus.PrimaryPart then
+    bus.PrimaryPart = seat
+end
+
+local flying = false
+local autofarmThread
+
+local function tweenTo(targetPosition)
+    local distance = (bus.PrimaryPart.Position - targetPosition).Magnitude
+    local tweenTime = distance / 90
+
+    local tweenInfo = TweenInfo.new(
+        tweenTime,
+        Enum.EasingStyle.Linear,
+        Enum.EasingDirection.InOut
+    )
+
+    local tween = TweenService:Create(bus.PrimaryPart, tweenInfo, {
+        CFrame = CFrame.new(targetPosition)
+    })
+    tween:Play()
+    tween.Completed:Wait()
+end
+
+-- Rayfield-Toggle
+local Toggle = DevTab:CreateToggle({ 
+    Name = "Autofarm CB", 
     CurrentValue = false,
-    Flag = "AFCB",
+    Flag = "Toggle1",
     Callback = function(Value)
-        if not Value then return end
+        flying = Value
 
-        -- Warten bis Bus geladen ist
-        local bus = Workspace.Vehicles:WaitForChild(451704c9-f368-48ca-ab7b-7d32315f4d26)
-        local primary = bus.PrimaryPart or bus:FindFirstChild("DriveSeat")
-        if not primary then warn("Bus hat keine gültige PrimaryPart!"); return end
-
-        -- Tween-Move Funktion mit Rotation
-        local function tweenMove(targetPos)
-            local currentPos = primary.Position
-            local direction = (targetPos - currentPos).Unit
-            local rotation = CFrame.new(Vector3.zero, direction)
-            local finalCFrame = CFrame.new(targetPos) * CFrame.Angles(0, rotation.Y, 0)
-
-            local distance = (targetPos - currentPos).Magnitude
-            local duration = distance * TWEEN_SPEED
-
-            local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Linear)
-            local goal = {CFrame = finalCFrame}
-            local tween = TweenService:Create(primary, tweenInfo, goal)
-            tween:Play()
-            tween.Completed:Wait()
+        if flying then
+            autofarmThread = task.spawn(function()
+                while flying do
+                    for _, pos in ipairs(points) do
+                        if not flying then break end
+                        tweenTo(pos)
+                        task.wait(0.1)
+                    end
+                end
+            end)
+        else
+            if autofarmThread then
+                task.cancel(autofarmThread)
+                autofarmThread = nil
+            end
         end
-
-        -- Zielpunkte
-        local function vec(x, y, z) return Vector3.new(x, y, z) end
-
-        local points = {
-            vec(-1723, 60, -1266),
-            vec(-510, 60, 831),
-            vec(-510, 10, 831),
-            vec(-510, 60, 831),
-            vec(112, 60, 1612),
-            vec(112, 10, 1612),
-        }
-
-        for _, point in ipairs(points) do
-            tweenMove(point)
-            task.wait(1)
-        end
-
-        Toggle:Set(false)
     end,
 })
-
-
-
